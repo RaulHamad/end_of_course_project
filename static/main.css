@@ -1,0 +1,74 @@
+body{
+
+    background: #ECE9E6;
+    background: -webkit-linear-gradient(to right, #FFFFFF, #ECE9E6);
+    background: linear-gradient(to right, #FFFFFF, #ECE9E6);
+    padding:20px;
+   display: flex;
+   justify-content: center;
+   background-image : url("../static/img/abstract-white-background.png" );
+   background-size: cover;
+
+
+
+
+
+
+}
+
+
+
+
+.container{
+
+
+
+    display:grid;
+    justify-content: center;
+    border: 2px solid;
+    padding:2%;
+    width: 900px;
+    background: #CC95C0;
+    background: -webkit-linear-gradient(to bottom, #7AA1D2, #DBD4B4, #CC95C0);
+    background: linear-gradient(to bottom, #7AA1D2, #DBD4B4, #CC95C0);
+    font-family: 'Bungee Spice', sans-serif;
+    font-family: 'Roboto Mono', monospace;
+
+
+
+}
+
+
+#header{
+padding: 40px;
+
+}
+
+#home{
+    font-size: 20px;
+    float:left;
+    font-family: 'Bungee Spice', sans-serif;
+    font-family: 'Roboto Mono', monospace;
+}
+
+#admin{
+    float: right;
+    font-family: 'Bungee Spice', sans-serif;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 20px;
+}
+#h2{
+font-family: 'Bungee Spice', sans-serif;
+font-family: 'Roboto Mono', monospace;
+}
+
+
+
+
+
+
+
+
+
+
+
