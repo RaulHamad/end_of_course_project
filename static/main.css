@@ -63,7 +63,9 @@ font-family: 'Roboto Mono', monospace;
 }
 
 
-
+.form-control{
+width:315px
+}
 
 
 
