@@ -1,20 +1,10 @@
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Luxury Wheels{% endblock %}</title>
-
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/flatly/bootstrap.min.css"
-          integrity="sha384-qF/QmIAj5ZaYFAeQcrQ6bfVMAh4zZlrGwTPY7T/M+iTTLJqJBJjwwnsE5Y0mV7QK" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
-
-</head>
-<body>
+{% block title %} Luxury Wheels {% endblock %}
+{% block info %}
 
 
-    <div class="container">
+
         <div id="header">
             <div id="home">
                 <a  href="{{url_for('page_index')}}" style="color:black"> Home</a>
@@ -28,50 +18,71 @@
         <div class="form-group">
             <h1 style="text-align: center">Welcome to Luxury Wheels</h1>
 
-            <label class="form-label mt-4"><h4>Register</h4></label>
-            <form method="POST" action="">
-                {{form.hidden_tag()}}
+
+            <label class="form-label mt-4"><h4>New Client</h4></label>
+            <form method="POST" action="/register" >
+
+
                 <div  class="form-floating mb-3">
-                    {{form.username(class="form-control",placeholder="name") }}
+
+                    <input style="width: 50%" name="name_login" type="text" class="form-control"
+                           placeholder="name" autofocus required>
                     <label for="floatingInput">Name</label><br>
 
                 </div>
                 <div  class="form-floating mb-3">
-                    {{form.user_email(class="form-control",placeholder="email") }}
+
+                    <input style="width: 50%" name="email_login" type="email" class="form-control"
+                           placeholder="email" required>
                     <label for="floatingInput">Email address</label>
                 </div>
                 <div class="form-floating mb-3">
-                    {{form.user_password(class="form-control",placeholder="password") }}
+
+                    <input style="width: 50%" name="password_login" type="password" class="form-control"
+                           placeholder="password" required>
                     <label for="floatingPassword">Password</label>
                 </div>
                 <div class="form-floating mb-3 ">
-                    {{form.user_check_password(class="form-control",placeholder="password check") }}
+
+                    <input style="width: 50%" name="check_password_login" type="password" class="form-control"
+                           placeholder="email" required>
                     <label for="floatingPassword">Check Password</label>
                 </div>
                 <div>
-                    {% for subfield in form.user_category %}
-                    <tr>
-                        <td>{{ subfield }}</td>
-                        <td>{{ subfield.label }}</td>
-                    </tr>
-                    {% endfor %}
+
+                    <select name="category" required>
+                            {% for i in cat_all %}
+                            {{ i }}
+                        <option value="{{i.id}}">{{ i.category }}</option>
+                            {% endfor %}
+
+
+                    </select>
+                     <label for="floatingSelect">Select your category</label>
 
                 </div>
                 <div >
-                    {{form.submit(class="btn btn-primary btn-lg")}}
+                   <input type="submit" name="submit" value="Register" class="btn btn-primary btn-lg">
+
 
                 </div>
             </form>
+
+            {% if error %}
+
+            <div class="alert alert-dismissible alert-danger">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <strong>{{error}}</strong>
+            </div>
+
+            {% endif %}
+
         </div>
 
-    </div>
 
 
 
 
 
 
-
-
-</body>
-</html>
+{% endblock %}
