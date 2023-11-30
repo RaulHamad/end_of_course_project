@@ -55,6 +55,13 @@
                 <strong>{{msg_error}}</strong>
             </div>
             {% endif %}
+             <br>
+            {% if error_login %}
+             <div id='alert' class="alert alert-dismissible alert-danger" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <strong>{{error_login}}</strong>
+            </div>
+            {% endif %}
         </div>
 
 

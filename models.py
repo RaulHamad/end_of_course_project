@@ -89,6 +89,7 @@ class Vehicle(db.Model):
     place = db.Column(db.Integer,nullable=False)
     service = db.Column(db.Integer, nullable=False)
     iva = db.Column(db.Boolean, nullable=False)
+    price_day = db.Column(db.Integer,nullable=False)
     category_id = db.Column(db.Integer,db.ForeignKey("categories.category"), nullable=False)
 
     # # vehicles = db.relationship('Vehicle', backref= 'vehicles', lazy=True)

@@ -1,8 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, url_for, request, redirect, session
+from flask import Flask, render_template, url_for, request, redirect, session,g,blueprints,app
 
 from models import *
-from flask_bcrypt import Bcrypt
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -12,13 +12,12 @@ db = SQLAlchemy()
 db.init_app(app)
 
 
-# bcrypt = Bcrypt(app)
 
 
 @app.route("/")
 @app.route("/index", methods=["GET", "POST"])
 def page_index():
-    # user_all = db.session.query(User).all()
+    session.clear()
     if request.method == 'POST':
         email = request.form['email_login'].lower().strip()
         password = request.form['password_login']
@@ -27,15 +26,16 @@ def page_index():
 
         if user == None:
             msg_error = f'Email does not exist. Please register'
-            print('error email')
             return render_template('index.html', msg_error=msg_error)
+
         elif check_password_hash(user.password,password) is False:
             msg_error = f'Password does not exist. Please register'
             print('error pass')
             return render_template('index.html', msg_error=msg_error)
 
         else:
-            print('ok')
+            session.clear()
+            session['clients_id'] =user.clients_id
 
             return redirect(url_for('rent_car'))
 
@@ -77,8 +77,24 @@ def page_register():
     return render_template("register.html", cat_all=cat_all)
 
 
-@app.route('/rent_car', methods=["GET", "POST"])
+
+@app.route('/rent_car/', methods=["GET", "POST"])
 def rent_car():
+
+    clients_login = session.get('clients_id')
+    if clients_login == None:
+        error_login = f'You need to login'
+        return render_template('index.html',error_login=error_login)
+    usuario = db.session.query(User).filter(User.clients_id == clients_login).first()
+    hello_user = usuario.name
+    print(clients_login)
+    # print(usuario.name)
+    return render_template("rent.html", hello_user=hello_user)
+
+
+
+
+
     return render_template('rent.html')
 
 
