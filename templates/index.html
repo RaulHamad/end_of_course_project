@@ -11,7 +11,7 @@
                     <a  href="{{url_for('page_index')}}" style="color:black"> Home</a>
                 </div>
                 <div id="admin">
-                    <a  href="" style="color:black"> Manager Login</a>
+                    <a  href="{{url_for('manager')}}" style="color:black"> Manager Login</a>
                 </div>
             </div>
 
@@ -60,6 +60,12 @@
              <div id='alert' class="alert alert-dismissible alert-danger" role="alert">
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 <strong>{{error_login}}</strong>
+            </div>
+            {% endif %}
+              {% if success %}
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <strong>{{success}}</strong>
             </div>
             {% endif %}
         </div>

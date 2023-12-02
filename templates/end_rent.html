@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %} Luxury Wheels {% endblock %}
+
+{% block info %}
+
+
+   <div id="header">
+            <div id="home">
+                <a  href="{{url_for('rent_car')}}" style="color:black"> Back</a>
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+            <h1 style="text-align: center">Welcome to Luxury Wheels</h1><br>
+
+
+            <label class="form-label mt-4"><h4>{{user.name}} </h4></label><br>Category = {{categ.category}}
+            <form   method="POST" action="/end_rent/" >
+
+
+                 <div   class="form-floating mb-3">
+
+
+
+                     <label  style="font-size:20px"for="floatingInput">Vehicle</label>
+                    <div style="padding:5px"class="price"><label  for="floatingInput"></label>{{price.name}}</div>
+
+                     <br>
+                    <label  style="font-size:20px"for="floatingInput">date pick up</label>
+                    <div style="padding:5px"class="price"><label  for="floatingInput"></label>{{date_format_begin}}</div>
+
+                </div>
+                <div   class="form-floating mb-3">
+                    <label  style="font-size:20px"for="floatingInput">Date return</label>
+                    <div style="padding:5px"class="price"><label  for="floatingInput"></label>{{date_format_end}}</div>
+
+                   </div>
+                       <label style="font-size:20px"for="floatingInput">Price day</label>
+                    <div style="padding:5px"class="price"><script></script>{{price.price_day}}</div>
+
+
+                    <label  style="font-size:20px"for="floatingInput">Total price</label>
+                    <div style="padding:5px"class="price"><label  for="floatingInput">{{total_price}}</label>
+                    </div>
+
+                    </div>
+
+                <div >
+
+                   <input style="float: right" type="submit" name="buycar" value="Rent Now" class="btn btn-primary btn-lg">
+
+
+                </div>
+
+            </form>
+            {% if error %}
+             <div id='alert' class="alert alert-dismissible alert-danger" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <strong>{{error}}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+
+
+{% endblock %}

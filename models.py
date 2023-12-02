@@ -11,7 +11,7 @@ class Category(db.Model):
     """
     __tablename__ = "categories"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,nullable=False)
     category = db.Column(db.String(50),nullable=False, unique=True)
 
 
@@ -31,7 +31,7 @@ class User(db.Model):
       """
     __tablename__ = "clients"
 
-    clients_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,nullable=False)
     name = db.Column(db.String(50),nullable=False)
     email = db.Column(db.String(100),nullable=False, unique=True)
     password = db.Column(db.String(500),nullable=False)
@@ -48,6 +48,7 @@ class User(db.Model):
 
 
 
+
 class Type(db.Model):
     """
          Criação da tabela Type para cadastro dos tipos de veiculos
@@ -58,7 +59,7 @@ class Type(db.Model):
          """
     __tablename__ = "vehicle_types"
 
-    type_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,nullable=False)
     type = db.Column(db.String(50),nullable=False, unique=True)
 
 
@@ -83,44 +84,32 @@ class Vehicle(db.Model):
           """
     __tablename__ = "vehicles"
 
-    id = db.Column(db.Integer, primary_key=True)
-    vehicles_type_id = db.Column(db.Integer,db.ForeignKey("vehicle_types.type_id"),nullable=False)
-    color = db.Column(db.String(100),nullable=False)
-    place = db.Column(db.Integer,nullable=False)
+    id = db.Column(db.Integer, primary_key=True,nullable=False)
+    type_id = db.Column(db.Integer,db.ForeignKey("vehicle_types.id"),nullable=False)
+    name = db.Column(db.String(100),nullable=False)
+    status = db.Column(db.Boolean,nullable=False)
     service = db.Column(db.Integer, nullable=False)
     iva = db.Column(db.Boolean, nullable=False)
     price_day = db.Column(db.Integer,nullable=False)
-    category_id = db.Column(db.Integer,db.ForeignKey("categories.category"), nullable=False)
+    category_id = db.Column(db.Integer,db.ForeignKey("categories.id"), nullable=False)
 
-    # # vehicles = db.relationship('Vehicle', backref= 'vehicles', lazy=True)
-    # vehicle_category = db.relationship('Category', uselist=False, back_populates="vehicles",
-    #                                    cascade="all, delete-orphan",
-    #                                    single_parent=True)
-    # ref_vehicle = db.relationship('Type', uselist=False, back_populates="vehicles",
-    #                               cascade="all, delete-orphan",
-    #                               single_parent=True)
-    #
-    # rent = db.relationship('Rebt', uselist=False, back_populates="vehicles", cascade="all, delete-orphan",
-    #                        single_parent=True)
+
+
+    def call_price(self):
+        return self.price_day
 
 class Rent(db.Model):
 
     __tablename__ = "rents"
 
-    rent_id = db.Column(db.Integer,primary_key=True)
-    client_id = db.Column(db.Integer,db.ForeignKey("clients.clients_id"), nullable=False)
-    vehicle_id = db.Column(db.Integer,db.ForeignKey("vehicles.id"))
+    id = db.Column(db.Integer,primary_key=True,nullable=False)
+    client_id = db.Column(db.Integer,db.ForeignKey("clients.id"), nullable=False)
+    vehicle_id = db.Column(db.Integer,db.ForeignKey("vehicles.id"), nullable=False)
     pick_up_date = db.Column(db.Date, nullable=False)
     return_date = db.Column(db.Date, nullable=False)
     price_day = db.Column(db.Float,nullable=False)
     status_rent = db.Column(db.Boolean,nullable=False)
     total_price = db.Column(db.Float,nullable=False)
-    #
-    # rent_user = db.relationship('User', uselist=False, back_populates="rents", cascade="all, delete-orphan",
-    #                        single_parent=True)
-    #
-    # rent_vehicle = db.relationship('Vehicle', uselist=False, back_populates="rents", cascade="all, delete-orphan",
-    #                        single_parent=True)
 
 
 

@@ -66,6 +66,7 @@ font-family: 'Roboto Mono', monospace;
 
 .form-control{
 width:315px;
+border-radius: 10px;
 
 }
 
@@ -101,3 +102,20 @@ padding: 7px;
 padding:100px;
 
 }
+
+.check_select{
+
+height:35px;
+width:315px;
+border-radius: 10px;
+}
+
+.price{
+
+height:35px;
+width:315px;
+border-radius: 10px;
+background: white;
+
+}
+

@@ -14,54 +14,56 @@
 
 
         <div class="form-group">
-            <h1 style="text-align: center">Welcome to Luxury Wheels</h1>
+            <h1 style="text-align: center">Welcome to Luxury Wheels</h1><br>
 
 
-            <label class="form-label mt-4"><h4></h4></label>
-            <form   method="POST" action="/register" >
+            <label class="form-label mt-4"><h4>{{user.name}} </h4></label><br>Category = {{categ.category}}
+            <form   method="POST" action="/rent_car/" >
 
 
                  <div   class="form-floating mb-3">
-                    <label for="floatingInput">Name</label>
-                    <input style="width: 50%" name="name_login" type="text" class="form-control"
-                           placeholder="name" autofocus required>
-                    <label for="floatingInput">Vehicle</label>
-                    <input style="width: 50%" name="name_login" type="text" class="form-control"
-                           placeholder="name" autofocus required>
-                    <label for="floatingInput">Pick up date</label>
-                    <input style="width: 50%" name="name_login" type="date"class="form-control
-                           placeholder="name" autofocus required>
+
+                    <label style="font-size:20px" for="floatingInput">Select Vehicle</label><br>
+
+
+                     <select class="check_select" name="cars" required>
+                            {% for i in vehicle %}
+                            {{ i }}
+                        <option value="{{i.id}}">{{ i.name }}</option>
+                        {% endfor %}
+
+
+                    </select>
+
+                     <br>
+                    <label style="font-size:20px"for="floatingInput">Pick up date</label>
+                    <input style="width: 50%" name="date_begin" type="date"class="form-control"required>
 
                 </div>
                 <div   class="form-floating mb-3">
-                    <label for="floatingInput">Return date</label>
-                    <input style="width: 50%" name="name_login" type="date" class="form-control"
-                           placeholder="name" autofocus required>
-                    <label for="floatingInput">Price day</label>
-                    <input style="width: 50%" name="name_login" type="number" class="form-control"
-                           placeholder="name" autofocus required>
-                    <label for="floatingInput">Total price</label>
-                    <input style="width: 50%" name="name_login" type="number" class="form-control"
-                           placeholder="name" autofocus required>
+                    <label style="font-size:20px"for="floatingInput">Return date</label>
+                   <div   class="form-floating mb-3">
+                    <input style="width: 50%" name="date_end" type="date" class="form-control" required>
+
+                   </div>
+
 
                 </div>
 
                 <div >
-                   <input type="submit" name="submit" value="Register" class="btn btn-primary btn-lg">
+                    <input type="reset" value="Reset" class="btn btn-primary btn-lg">
+                   <input style="float: right" type="submit" name="buycar" value="Verify price" class="btn btn-primary btn-lg">
 
 
                 </div>
 
             </form>
             {% if error %}
-
-            <div class="alert alert-dismissible alert-danger">
+             <div id='alert' class="alert alert-dismissible alert-danger" role="alert">
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 <strong>{{error}}</strong>
             </div>
-
             {% endif %}
-
         </div>
 
 
