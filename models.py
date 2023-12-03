@@ -14,7 +14,6 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True,nullable=False)
     category = db.Column(db.String(50),nullable=False, unique=True)
 
-
     def __init__(self,category):
         self.category = category
 
@@ -37,16 +36,11 @@ class User(db.Model):
     password = db.Column(db.String(500),nullable=False)
     categories_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
 
-
-
     def __int__(self,name,email,password,categories_id):
         self.name = name
         self.email = email
         self.password = password
         self.categories_id = categories_id
-
-
-
 
 
 class Type(db.Model):
@@ -62,12 +56,8 @@ class Type(db.Model):
     id = db.Column(db.Integer, primary_key=True,nullable=False)
     type = db.Column(db.String(50),nullable=False, unique=True)
 
-
-
-
     def __int__(self, type):
         self.type = type
-
 
     def __repr__(self):
         return f' {self.type}'
@@ -95,7 +85,6 @@ class Vehicle(db.Model):
     iva = db.Column(db.Boolean, nullable=False)
     price_day = db.Column(db.Integer,nullable=False)
     category_id = db.Column(db.Integer,db.ForeignKey("categories.id"), nullable=False)
-
 
 
     def call_price(self):

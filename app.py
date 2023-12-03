@@ -5,15 +5,11 @@ from models import *
 from manager import App_admin,Tk
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../database/luxurywheels.db'
 app.config["SECRET_KEY"] = '123456'
 db = SQLAlchemy()
 db.init_app(app)
-
-
 
 
 @app.route("/")
@@ -50,7 +46,6 @@ def page_index():
             db.session.commit()
 
 
-
     if request.method == 'POST':
         email = request.form['email_login'].lower().strip()
         password = request.form['password_login']
@@ -79,7 +74,6 @@ def page_index():
 def page_register():
     """
     Rota para registro do usuario e criação do objeto para o banco de dados
-
 
     """
     cat_all = db.session.query(Category).all()
@@ -115,7 +109,6 @@ def page_register():
     return render_template("register.html", cat_all=cat_all)
 
 
-
 @app.route('/rent_car/', methods=["GET", "POST"])
 def rent_car():
     """
@@ -123,7 +116,6 @@ def rent_car():
         user : pesquisa para verificar o Id do cliente e realizar um filtro para identificar a categoria de cada um
         cars: usuario escolhe veiculo de acordo com sua categoria e a disponibilidades dos veiculos
         date_format_begin,date_format_end : converter str para date.
-
 
     """
     clients_login = session.get('clients_id')
@@ -168,16 +160,9 @@ def rent_car():
         session['date_begin'] = date_begin
         session['date_end'] = date_end
 
-
-
-
-
         return render_template("end_rent.html", price=price,user=user,categ=categ,
                                vehicle=vehicle,total_price=total_price,date_format_begin=date_format_begin,
                                date_format_end=date_format_end)
-
-
-
 
 
     return render_template("rent.html", user=user, categ=categ,vehicle=vehicle)
@@ -208,7 +193,6 @@ def end_rent():
 
     if vehicle != None:
 
-
             rent1 = Rent(client_id=user.id,vehicle_id=vehicle.id,pick_up_date=date_format_begin,
                          return_date=date_format_end,price_day=vehicle.price_day,status_rent=True,
                          total_price=(vehicle.price_day*day_sub))
@@ -219,12 +203,7 @@ def end_rent():
             success = f'Successfully rented vehicle!'
             return render_template("index.html",success=success,vehicle=vehicle,categ=categ,user=user)
 
-
-
-
-
     return render_template("end_rent.html",vehicle=vehicle,categ=categ,user=user)
-
 
 
 @app.route('/manager/')
