@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, url_for, request, redirect, session
 from datetime import datetime
 from models import *
-from manager import *
+from manager import App_admin,Tk
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -229,9 +229,13 @@ def end_rent():
 
 @app.route('/manager/')
 def manager():
+    """
+    Inicializar o app administrador(será feito o app pelo tkinter)
+    :return:
+    """
     if __name__ == '__main__':
         root = Tk()
-        app = Produto(root)
+        app = App_admin(root)
 
         root.mainloop()
 

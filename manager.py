@@ -3,7 +3,7 @@ from tkinter import ttk
 import sqlite3
 
 
-class Produto():
+class App_admin():
     db = "database/luxurywheels.db"
 
     def __init__(self, root):

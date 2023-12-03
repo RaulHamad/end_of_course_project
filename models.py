@@ -5,9 +5,9 @@ from app import db,app
 
 class Category(db.Model):
     """
-    Criação da tabela category_clients para passar que tipo de categoria o cliente se cadastrou
+    Criação da tabela categories para passar que tipo de categoria que o cliente se cadastrou
 
-    categoria : Gold, Silver, Economic
+    category : Gold, Silver, Economic
     """
     __tablename__ = "categories"
 
@@ -53,8 +53,8 @@ class Type(db.Model):
     """
          Criação da tabela Type para cadastro dos tipos de veiculos
             tipo: Carro, moto
-         id do cliente
-         tipo do veiculo
+         id :do cliente
+         type: do veiculo
 
          """
     __tablename__ = "vehicle_types"
@@ -76,11 +76,14 @@ class Vehicle(db.Model):
     """
           Criação da tabela Vehicle para cadastro dos veiculos
 
-          id do veiculo
-          id_type com base no tipo de veiculo
-          cor do veiculo
-          quantidade de lugares no veiculo
-          iva - verificar se IVA foi pago
+          id: id do veiculo
+          type_id: type com base na tabela vehicle_types
+          name:  nome do veiculo
+          status: se irá ficar disponivel para locação ou não
+          service: integer que ao atingir 5 locações, irá para revisão(30 dias indisponiveis para locação)
+          iva: verificar se IVA foi pago
+          price_day: preço do aluguel diário do veículo
+          category_id: categoria com base em category_id
           """
     __tablename__ = "vehicles"
 
@@ -99,6 +102,16 @@ class Vehicle(db.Model):
         return self.price_day
 
 class Rent(db.Model):
+    """
+    Tabela para cadastrar locações de veículos
+
+    client_id: id do cliente cadastrado
+    vehicle_id: id do veículo cadastrado
+    pick_up_date: data para retirada do veículo
+    return_date: data para devolução do veículo
+    price_day: preço do aluguel diário do veículo
+    total_price: preço total a ser pago
+    """
 
     __tablename__ = "rents"
 
