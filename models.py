@@ -85,6 +85,7 @@ class Vehicle(db.Model):
     iva = db.Column(db.Boolean, nullable=False)
     price_day = db.Column(db.Integer,nullable=False)
     category_id = db.Column(db.Integer,db.ForeignKey("categories.id"), nullable=False)
+    image_car = db.Column(db.String(100), nullable=False)
 
 
     def call_price(self):

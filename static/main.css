@@ -112,10 +112,17 @@ border-radius: 10px;
 
 .price{
 
+display: flex;
 height:35px;
 width:315px;
 border-radius: 10px;
 background: white;
 
+
 }
 
+.photo{
+
+padding:70px;
+
+}
