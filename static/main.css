@@ -121,8 +121,40 @@ background: white;
 
 }
 
+.price2{
+
+display: flex;
+height:35px;
+width:250px;
+border-radius: 10px;
+background: white;
+
+
+}
+
 .photo{
 
 padding:70px;
 
+}
+
+#paymentForm{
+
+width:500px;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
 }

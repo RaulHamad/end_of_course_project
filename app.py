@@ -2,8 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, url_for, request, redirect, session
 from datetime import datetime
 from models import *
-from manager import App_admin,Tk
+from manager import *
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../database/luxurywheels.db'
@@ -26,12 +27,13 @@ def page_index():
 
     """
     session.clear()
+
     check_rents = db.session.query(Rent).all()
     check_vehicles = db.session.query(Vehicle).filter(Vehicle.status==False).all()
     date_today = datetime.now().date()
 
     for check_date in check_rents:
-        if check_date.return_date == date_today:
+        if check_date.return_date <= date_today:
             check_date.status_rent = False
             db.session.commit()
 
@@ -58,7 +60,6 @@ def page_index():
 
         elif check_password_hash(user.password,password) is False:
             msg_error = f'Password does not exist. Please register'
-            print('error pass')
             return render_template('index.html', msg_error=msg_error)
 
         else:
@@ -119,6 +120,7 @@ def rent_car():
 
     """
     clients_login = session.get('clients_id')
+
     if clients_login == None:
         error_login = f'You need to login'
 
@@ -152,8 +154,6 @@ def rent_car():
             days = ((date_format_end - date_format_begin).days) * (-1)
 
         price = db.session.query(Vehicle).filter(Vehicle.id == int(car)).first()
-        print(date_format_begin,date_format_end)
-        print(date_begin,date_end)
         total_price = (price.price_day) * days
         session['vehicle_id'] = price.id
         session['total_days'] = days
@@ -180,8 +180,43 @@ def end_rent():
     day_sub = session.get('total_days')
     date_begin = session.get('date_begin')
     date_end = session.get('date_end')
-    date_format_begin = datetime.strptime(date_begin,'%Y-%m-%d').date()
-    date_format_end = datetime.strptime(date_end,'%Y-%m-%d').date()
+    date_format_begin = datetime.strptime(date_begin, '%Y-%m-%d').date()
+    date_format_end = datetime.strptime(date_end, '%Y-%m-%d').date()
+
+    if clients_login == None:
+        error_login = f'You need to login'
+
+        return render_template('index.html', error_login=error_login)
+
+    user = db.session.query(User).filter(User.id == clients_login).first()
+    categ = db.session.query(Category).filter(Category.id == user.categories_id).first()
+    vehicle = db.session.query(Vehicle).filter(Vehicle.id == vehicless).first()
+    total_price = (vehicle.price_day * day_sub)
+    if vehicless != None:
+
+        return render_template('payment.html',vehicle=vehicle,categ=categ,user=user,
+                               total_price=total_price)
+
+
+    return render_template("end_rent.html",vehicle=vehicle,categ=categ,user=user,
+                           total_price=total_price)
+
+
+@app.route('/payment/', methods=['GET', 'POST'])
+def payment():
+    """
+    Rota para inserir os dados de pagamento do aluguel, e salvar no banco de dados as informações
+
+    :return:
+    """
+    clients_login = session.get('clients_id')
+    vehicless = session.get('vehicle_id')
+    date_begin = session.get('date_begin')
+    day_sub = session.get('total_days')
+    date_end = session.get('date_end')
+    date_format_begin = datetime.strptime(date_begin, '%Y-%m-%d').date()
+    date_format_end = datetime.strptime(date_end, '%Y-%m-%d').date()
+
     if clients_login == None:
         error_login = f'You need to login'
 
@@ -191,19 +226,72 @@ def end_rent():
     categ = db.session.query(Category).filter(Category.id == user.categories_id).first()
     vehicle = db.session.query(Vehicle).filter(Vehicle.id == vehicless).first()
 
-    if vehicle != None:
 
-            rent1 = Rent(client_id=user.id,vehicle_id=vehicle.id,pick_up_date=date_format_begin,
-                         return_date=date_format_end,price_day=vehicle.price_day,status_rent=True,
-                         total_price=(vehicle.price_day*day_sub))
+    if request.method == 'POST':
+        card_number = request.form['card_number']
+        expiration_date = request.form['expiration_date']
+        cvv = request.form['cvv']
+        remember = request.form.get('remember')
+        date_format_expiration = datetime.strptime(expiration_date, '%Y-%m-%d').date()
+        cvv_hash = generate_password_hash(cvv, method='pbkdf2:sha256')
+
+        if remember != None:
+            card1 = CardNumber(number=card_number, expiration=date_format_expiration,cvv=cvv_hash,client_id=user.id)
+            db.session.add(card1)
+            db.session.commit()
+
+        if vehicle.status == True:
+
+            rent1 = Rent(client_id=user.id, vehicle_id=vehicle.id, pick_up_date=date_format_begin,
+                                 return_date=date_format_end,price_day=vehicle.price_day,status_rent=True,
+                                 total_price=(vehicle.price_day*day_sub))
             db.session.add(rent1)
             db.session.commit()
             vehicle.status = False
             db.session.commit()
             success = f'Successfully rented vehicle!'
-            return render_template("index.html",success=success,vehicle=vehicle,categ=categ,user=user)
+            rents = db.session.query(Rent, Vehicle).join(Rent).filter(Rent.client_id == clients_login).all()
+            total = 0
+            total_list = list()
+            for sum in rents:
+                total += sum[0].total_price
+            total_list.append(total)
+            return render_template("my_rentals.html", vehicle=vehicle, categ=categ,
+                                   user=user, success=success,rents=rents,total_list=total_list)
+        else:
 
-    return render_template("end_rent.html",vehicle=vehicle,categ=categ,user=user)
+            error = f'Vehicle already rented!'
+            rents = db.session.query(Rent, Vehicle).join(Rent).filter(Rent.client_id == clients_login).all()
+            total = 0
+            total_list = list()
+            for sum in rents:
+                total += sum[0].total_price
+            total_list.append(total)
+            return render_template("my_rentals.html", vehicle=vehicle, categ=categ,
+                                   user=user,error=error,rents=rents,total_list=total_list)
+
+
+    return render_template("payment.html",vehicle=vehicle,categ=categ,user=user)
+
+
+@app.route('/my_rentals/')
+def my_rentals():
+    """
+    Rota para o cliente visualizar seus alugueis
+
+    :return:
+    """
+    clients_login = session.get('clients_id')
+
+    rents = db.session.query(Rent, Vehicle).join(Rent).filter(Rent.client_id == clients_login).all()
+    total = 0
+    total_list = list()
+    for sum in rents:
+        total += sum[0].total_price
+    total_list.append(total)
+
+
+    return render_template("my_rentals.html",rents=rents,total=total,total_list=total_list)
 
 
 @app.route('/manager/')
@@ -214,8 +302,7 @@ def manager():
     """
     if __name__ == '__main__':
         root = Tk()
-        app = App_admin(root)
-
+        app= App_admin(root)
         root.mainloop()
 
     return render_template("index.html")

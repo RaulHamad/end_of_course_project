@@ -22,11 +22,11 @@ class User(db.Model):
     """
       Criação da tabela User para cadastro dos clientes
 
-      id do cliente
-      nome do cliente
-      email do cliente
-      senha do cliente
-      categoria do cliente - com base na tabela categories
+      id: id do cliente
+      name: nome do cliente
+      email: email do cliente
+      password: senha do cliente
+      categories_id: categoria do cliente - com base na tabela categories
       """
     __tablename__ = "clients"
 
@@ -100,6 +100,7 @@ class Rent(db.Model):
     pick_up_date: data para retirada do veículo
     return_date: data para devolução do veículo
     price_day: preço do aluguel diário do veículo
+    status_rent: True para alugueis ativos
     total_price: preço total a ser pago
     """
 
@@ -114,6 +115,24 @@ class Rent(db.Model):
     status_rent = db.Column(db.Boolean,nullable=False)
     total_price = db.Column(db.Float,nullable=False)
 
+
+class CardNumber(db.Model):
+    """
+      Criação da tabela CardNumber para cadastro dos dados de compra dos clientes
+
+      id: id do cartão do cliente
+      number: numero do cartão do cliente
+      expiration: data que expira o cartão do cliente
+      cvv: codigo cartão do cliente
+      client_id:  id do cliente cadastrado - com base na tabela clients
+      """
+    __tablename__ = "cards"
+
+    id = db.Column(db.Integer, primary_key=True,nullable=False)
+    number = db.Column(db.Integer,nullable=False)
+    expiration = db.Column(db.Date,nullable=False)
+    cvv = db.Column(db.Integer,nullable=False)
+    client_id = db.Column(db.Integer,db.ForeignKey("clients.id"), nullable=False)
 
 
 with app.app_context():

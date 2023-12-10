@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %} Luxury Wheels {% endblock %}
+{% block info %}
+
+        <div id="header">
+            <div id="home">
+                <a  href="{{url_for('rent_car')}}" style="color:black"> Back</a>
+            </div>
+            <div id="admin">
+                <a  href="{{url_for('page_index')}}" style="color:black"> Logout</a>
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+            <h1 style="text-align: center">Welcome to Luxury Wheels</h1>
+
+
+            <table>
+                <tr>
+                <th>Vehicle</th>
+                <th>Pick up date</th>
+                <th>Return date</th>
+                <th>Price day</th>
+                <th>Total Price</th>
+                </tr>
+                {% for rent,vehicle in rents %}
+
+                <tr>
+                <td>{{vehicle.name}}</td>
+                <td>{{rent.pick_up_date}}</td>
+                <td>{{rent.return_date}}</td>
+                <td>{{rent.price_day}}£</td>
+                <td>{{rent.total_price}}£</td>
+                </tr>
+
+                    {% endfor %}
+                {% for value in total_list %}
+                <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Total:</td>
+                <td>{{value}}£</td>
+                </tr>
+                    {% endfor %}
+            </table>
+
+                <br>
+                <a  href="{{url_for('rent_car')}}" style="color:red"class="btn btn-primary btn-lg"><u>New Rent</u></a>
+
+
+
+               {% if success %}
+                <div class="alert alert-dismissible alert-success">
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  <strong>{{success}}</strong>
+                </div>
+                {% endif %}
+                {% if error %}
+                <div id='alert' class="alert alert-dismissible alert-danger" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <strong>{{error}}</strong>
+                </div>
+
+            {% endif %}
+            </div>
+        </div>
+
+
+
+
+
+{% endblock %}
