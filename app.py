@@ -18,10 +18,9 @@ db.init_app(app)
 def page_index():
     """
         session.clear() : limpar session para não acessar página de aluguel sem estar logado
-
-        check_rents,check_vehicles,date_today : atualiza banco de dados de aluguel e veiculos.
-
-    Aluguel finalizado retorna status False e status do veiculo altera para True.
+        check_rents,check_vehicles_status,
+        check_vehicles_service,date_today : atualiza banco de dados de aluguel e veiculos.
+        Aluguel finalizado retorna status False e status do veiculo altera para True.
 
         Request form para realizar login do usuario
 
@@ -29,7 +28,8 @@ def page_index():
     session.clear()
 
     check_rents = db.session.query(Rent).all()
-    check_vehicles = db.session.query(Vehicle).filter(Vehicle.status==False).all()
+    check_vehicles_status = db.session.query(Vehicle).filter(Vehicle.status == False).all()
+    check_vehicles_service = db.session.query(Vehicle).filter(Vehicle.service > 4).all()
     date_today = datetime.now().date()
 
     for check_date in check_rents:
@@ -37,16 +37,21 @@ def page_index():
             check_date.status_rent = False
             db.session.commit()
 
-    for check_vehicle in check_vehicles:
+    for check_vehicle in check_vehicles_status:
         for check_date in check_rents:
             if check_date.status_rent == False and check_date.vehicle_id == check_vehicle.id:
                 check_vehicle.status = True
                 db.session.commit()
-    if check_rents == []:
-        for check_vehicle in check_vehicles:
-            check_vehicle.status = True
+
+    for check_vehicle in check_vehicles_service:
+        if check_vehicle.date_service == str(datetime.now().date()) and check_vehicle.status == True:
+            check_vehicle.service = 0
             db.session.commit()
 
+    if check_rents == []:
+        for check_vehicle in check_vehicles_status:
+            check_vehicle.status = True
+            db.session.commit()
 
     if request.method == 'POST':
         email = request.form['email_login'].lower().strip()
@@ -121,6 +126,7 @@ def rent_car():
     """
     clients_login = session.get('clients_id')
 
+
     if clients_login == None:
         error_login = f'You need to login'
 
@@ -129,17 +135,20 @@ def rent_car():
     categ = db.session.query(Category).filter(Category.id == user.categories_id).first()
 
     if user.categories_id == 1:
-        vehicle = db.session.query(Vehicle).order_by(Vehicle.name).filter(Vehicle.status == True).all()
+        vehicle = (db.session.query(Vehicle).filter(Vehicle.status == True).filter
+                   (Vehicle.service < 5).order_by(Vehicle.name).all())
 
 
     elif user.categories_id == 2:
         vehicle = (db.session.query(Vehicle).filter(Vehicle.category_id >= 2).filter
-                   (Vehicle.status == True).order_by(Vehicle.name).all())
+                   (Vehicle.status == True).filter(Vehicle.service < 5).order_by
+                   (Vehicle.name).all())
 
 
     else:
         vehicle = (db.session.query(Vehicle).filter(Vehicle.category_id == 3).filter
-                   (Vehicle.status == True).order_by(Vehicle.name).all())
+                   (Vehicle.status == True and Vehicle.service < 5).order_by
+                   (Vehicle.name).all())
 
     if request.method == 'POST':
 
@@ -246,8 +255,8 @@ def payment():
                                  return_date=date_format_end,price_day=vehicle.price_day,status_rent=True,
                                  total_price=(vehicle.price_day*day_sub))
             db.session.add(rent1)
-            db.session.commit()
             vehicle.status = False
+            vehicle.service += 1
             db.session.commit()
             success = f'Successfully rented vehicle!'
             rents = db.session.query(Rent, Vehicle).join(Rent).filter(Rent.client_id == clients_login).all()

@@ -47,14 +47,16 @@ class Type(db.Model):
     """
          Criação da tabela Type para cadastro dos tipos de veiculos
             tipo: Carro, moto
-         id :do cliente
-         type: do veiculo
+         id :id do cliente
+         type: tipo do veiculo
+         iva_price: valor a ser pago anualmente
 
          """
     __tablename__ = "vehicle_types"
 
     id = db.Column(db.Integer, primary_key=True,nullable=False)
     type = db.Column(db.String(50),nullable=False, unique=True)
+    iva_price = db.Column(db.Integer, nullable=False)
 
     def __int__(self, type):
         self.type = type
@@ -82,7 +84,9 @@ class Vehicle(db.Model):
     name = db.Column(db.String(100),nullable=False)
     status = db.Column(db.Boolean,nullable=False)
     service = db.Column(db.Integer, nullable=False)
-    iva = db.Column(db.Boolean, nullable=False)
+    date_service = db.Column(db.Date)
+    iva = db.Column(db.Date, nullable=False)
+    next_iva = db.Column(db.Date, nullable=False)
     price_day = db.Column(db.Integer,nullable=False)
     category_id = db.Column(db.Integer,db.ForeignKey("categories.id"), nullable=False)
     image_car = db.Column(db.String(100), nullable=False)
