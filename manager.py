@@ -159,6 +159,12 @@ class Data_base():
 
         return result
 
+    def query_iva_payments(self):
+        self.open_sql()
+        iva_payments_table = """SELECT * FROM iva_payments ;"""
+        result = self.cursor.execute(iva_payments_table)
+
+        return result.fetchall()
 
 class App_admin(Data_base):
 
@@ -175,7 +181,7 @@ class App_admin(Data_base):
         self.table_admin()
         self.query_admin()
         self.create_admin()
-
+        self.query_iva_payments()
 
 
 
@@ -282,6 +288,8 @@ class App_admin(Data_base):
         self.frame_1.place_forget()
         self.frame_2.place_forget()
 
+
+
         self.frame_3 = Frame(self.first_root,background=self.deepskyblue)
         self.frame_3.place(relx=0.01,rely=0.01,relwidth=0.98, relheight=0.99)
 
@@ -311,7 +319,31 @@ class App_admin(Data_base):
                                          command=self.list_iva, bg=self.darkslategray, relief="raise")
         self.button_iva.place(relx=0.79, rely=0.02, relwidth=0.2, relheight=0.25)
 
+        self.label_expense = Label(self.label_main_options, text="Expense:", font=("bold"),
+                                   foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_expense.place(relx=0.10, rely=0.75, relwidth=0.1, relheight=0.25)
 
+        self.label_expense_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+                                         foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_expense_value.place(relx=0.21, rely=0.75, relwidth=0.15, relheight=0.25)
+
+        self.label_profit = Label(self.label_main_options, text="Profit:", font=("bold"),
+                                  foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_profit.place(relx=0.36, rely=0.75, relwidth=0.1, relheight=0.25)
+
+        self.label_profit_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+                                        foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_profit_value.place(relx=0.45, rely=0.75, relwidth=0.15, relheight=0.25)
+
+        self.label_total = Label(self.label_main_options, text="Total:", font=("bold"),
+                                 foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_total.place(relx=0.70, rely=0.75, relwidth=0.1, relheight=0.25)
+
+        self.label_total_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+                                       foreground=self.ghostwhite,background=self.deepskyblue)
+        self.label_total_value.place(relx=0.79, rely=0.75, relwidth=0.15, relheight=0.25)
+
+        self.profit_expense()
 
     def clear_checklist(self):
 
@@ -444,6 +476,7 @@ class App_admin(Data_base):
             else:
                 self.check_data.insert("", END, values=check_rent)
         self.close_sql()
+        self.profit_expense()
     def service_maintenance(self):
 
         try:
@@ -500,23 +533,23 @@ class App_admin(Data_base):
     def start_maintenance(self):
         self.check_data.delete(*self.check_data.get_children())
         date_maintenance = timedelta(days=30)
-
+        list_maintenance = []
         for check_rent in self.query_service():
-            if check_rent[6] < str(datetime.now().date()):
-                print(check_rent)
-
-                convert_for_date = datetime.strptime(check_rent[5],'%Y-%m-%d').date()
+            list_maintenance.append(check_rent)
+        print(list_maintenance)
+        for maintenance in list_maintenance:
+            if maintenance[6] < str(datetime.now().date()):
+                convert_for_date = datetime.strptime(maintenance[5],'%Y-%m-%d').date()
                 new_date_finish_maintenance = str(convert_for_date + date_maintenance)
-                print(new_date_finish_maintenance,type(new_date_finish_maintenance))
 
-                date_finish_maintenance = '''UPDATE vehicles SET date_service ='{}'
-                 WHERE service = 5'''.format(new_date_finish_maintenance)
-
+                date_finish_maintenance = (f"UPDATE vehicles SET date_service = '{new_date_finish_maintenance}'"
+                                           f"WHERE name = '{maintenance[1]}';")
                 self.cursor.execute(date_finish_maintenance)
                 self.conn.commit()
         self.button_start_service.place_forget()
         self.list_vehicle()
         self.close_sql()
+
     def list_iva(self):
 
         try:
@@ -574,44 +607,49 @@ class App_admin(Data_base):
     def pay_iva(self):
         self.check_data.delete(*self.check_data.get_children())
         date_yearly_iva = timedelta(days=365)
-        date_now = datetime.now().date()
-
+        list_iva = []
         for check_iva in self.query_iva():
-            date_table = datetime.strptime(check_iva[4], '%Y-%m-%d').date()
+            list_iva.append(check_iva)
+
+        for vehicle in list_iva:
+            date_table = datetime.strptime(vehicle[4], '%Y-%m-%d').date()
             new_date_iva = str(date_table + date_yearly_iva)
 
-
-
-            # date_pay_iva = '''UPDATE vehicles SET iva ='{}', next_iva = '{}' WHERE next_iva > '{}'
-            #                   '''.format(str(check_iva[4]),new_date_iva,str(date_now))
-            # self.cursor.execute(date_pay_iva)
-            # self.conn.commit()
-            if check_iva[1] == 'Car':
-                print('car')
-                print(check_iva)
-
-                # update_iva_prices_car = """
-                #                 INSERT INTO iva_payments (name,type,price) VALUES (?,?,?);
-                #                 """
-                # self.cursor.execute(update_iva_prices_car,(check_iva[2],check_iva[1],250))
-                # self.conn.commit()
-
-
-            elif check_iva[1] == 'Motorcycle':
-                print('moto')
-                print(check_iva)
-
-                # update_iva_prices_moto = """
-                #         INSERT INTO iva_payments (name,type,price) VALUES (?,?,?);
-                #         """
-                # self.cursor.execute(update_iva_prices_moto,(check_iva[2],check_iva[1],150))
-                # self.conn.commit()
-
-
+            if vehicle[1] == 'Car':
+                date_pay_iva = (f"UPDATE vehicles SET iva = '{vehicle[4]}', next_iva = '{new_date_iva}'"
+                                f" WHERE name = '{vehicle[2]}';")
+                self.cursor.execute(date_pay_iva)
+                update_iva_prices_car = """INSERT INTO iva_payments (name,type,price) VALUES (?,?,?); """
+                self.cursor.execute(update_iva_prices_car,(vehicle[2],vehicle[1],250))
+                self.conn.commit()
+            elif vehicle[1] == 'Motorcycle':
+                date_pay_iva = (f"UPDATE vehicles SET iva = '{vehicle[4]}', next_iva = '{new_date_iva}'"
+                                f" WHERE name = '{vehicle[2]}';")
+                self.cursor.execute(date_pay_iva)
+                update_iva_prices_motorcycle = """INSERT INTO iva_payments (name,type,price) VALUES (?,?,?);"""
+                self.cursor.execute(update_iva_prices_motorcycle, (vehicle[2], vehicle[1], 150))
+                self.conn.commit()
 
         self.button_pay_iva.place_forget()
         self.list_iva()
         self.close_sql()
+        self.profit_expense()
+
+    def profit_expense(self):
+        profit,expense = 0,0
+
+
+        for check_price in self.query_rents():
+            if check_price[6] == 'EndRent':
+                profit += check_price[7]
+                
+        for check_price in self.query_iva_payments():
+            expense += check_price[3]
+        self.label_expense_value['text'] = str(expense) + ' £'
+        self.label_profit_value['text'] = str(profit) + ' £'
+        total = profit - expense
+        self.label_total_value['text'] = str(total) + ' £'
+
 
 if __name__ == '__main__':
 
