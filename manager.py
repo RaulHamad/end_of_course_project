@@ -1,8 +1,15 @@
 from tkinter import *
 from tkinter import ttk,messagebox
+from tkcalendar import Calendar, DateEntry
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime,timedelta
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import pandas as pd
+
+
 
 root = Tk()
 
@@ -41,6 +48,7 @@ class Data_base():
                         name	varchar(30) NOT NULL,
                         type	varchar(50) NOT NULL,
                         price	INTEGER NOT NULL,
+                        date    DATE NOT NULL,
                         PRIMARY KEY("id")
                                             );
                         """
@@ -67,6 +75,22 @@ class Data_base():
 
         self.close_sql()
 
+    def query_type(self):
+        self.open_sql()
+        verify_table_types = f"SELECT * FROM vehicle_types"
+        result = self.cursor.execute(verify_table_types)
+        return result.fetchall()
+
+    def query_clients(self):
+        self.open_sql()
+        verify_clients = f"SELECT * FROM clients"
+        result = self.cursor.execute(verify_clients)
+        return result.fetchall()
+    def query_Category(self):
+        self.open_sql()
+        verify_table_category = f"SELECT * FROM categories"
+        result = self.cursor.execute(verify_table_category)
+        return result.fetchall()
 
     def query_vehicle(self):
 
@@ -152,7 +176,7 @@ class Data_base():
                 v.next_iva
                 
                 from vehicles v INNER JOIN vehicle_types t on v.type_id = t.id
-                WHERE v.next_iva < '{}'
+                WHERE v.next_iva <= '{}'
                 ORDER BY v.iva ASC;
                 """.format(date)
         result = self.cursor.execute(vehicle_table)
@@ -182,6 +206,10 @@ class App_admin(Data_base):
         self.query_admin()
         self.create_admin()
         self.query_iva_payments()
+        self.functions_for_combobox()
+
+
+
 
 
 
@@ -191,6 +219,15 @@ class App_admin(Data_base):
     def variable(self):
         self.var_login = StringVar()
         self.var_password = StringVar()
+        self.select_type_vehicle = StringVar()
+        self.select_name_vehicle = StringVar()
+        self.select_service_vehicle = StringVar()
+        self.select_last_iva_vehicle = StringVar()
+        self.select_next_iva_vehicle = StringVar()
+        self.select_price_vehicle = IntVar()
+        self.select_category_vehicle = StringVar()
+
+
 
 
     def colors(self):
@@ -204,7 +241,7 @@ class App_admin(Data_base):
         self.first_root.title("Luxury Wheels")  # altera titulo da janela
         self.first_root.resizable(True, True)  # permite redimensionar a janela
         self.first_root.geometry("700x500")
-        self.first_root.configure()
+        self.first_root.configure(background=self.deepskyblue)
         self.first_root.minsize(width=700,height=500)
         self.first_root.maxsize(width=900,height=800)
         self.first_root.iconbitmap('./static/assets/car.ico')
@@ -289,6 +326,7 @@ class App_admin(Data_base):
         self.frame_2.place_forget()
 
 
+        self.check_need_buy_vehicle()
 
         self.frame_3 = Frame(self.first_root,background=self.deepskyblue)
         self.frame_3.place(relx=0.01,rely=0.01,relwidth=0.98, relheight=0.99)
@@ -296,34 +334,39 @@ class App_admin(Data_base):
         self.label_main_options = ttk.Label(self.frame_3,background=self.deepskyblue)
         self.label_main_options.place(relx=0.02, rely=0.03, relwidth=0.96, relheight=0.2)
 
-        self.label_main_view_vehicle = ttk.Label(self.frame_3,background="white")
+        self.label_main_view_vehicle = ttk.Label(self.frame_3,background=self.deepskyblue)
         self.label_main_view_vehicle.place(relx=0.02, rely=0.25, relwidth=0.96, relheight=0.7)
 
         self.button_list_vehicle = Button(self.label_main_options, text="VEHICLES",command=self.list_vehicle,
                                           font=("bold"),foreground="white",
-                                          bg=self.darkslategray,relief="raise")
+                                          bg=self.darkslategray)
         self.button_list_vehicle.place(relx=0.01, rely=0.02, relwidth=0.2, relheight=0.25)
+
+        self.button_add_vehicle = Button(self.label_main_options, text="NEW VEHICLE", font=("bold")
+                                           , command=self.menu_add_vehicle, foreground="white",
+                                           bg=self.darkslategray)
+        self.button_add_vehicle.place(relx=0.01, rely=0.35, relwidth=0.2, relheight=0.25)
 
         self.button_list_rent = Button(self.label_main_options, text="RENTS",command=self.list_rents,
                                        font=("bold"),foreground="white",
-                                          bg=self.darkslategray, relief="raise")
+                                          bg=self.darkslategray)
         self.button_list_rent.place(relx=0.27, rely=0.02, relwidth=0.2, relheight=0.25)
 
         self.button_service = Button(self.label_main_options, text="VERIFY SERVICE", font=("bold"),
                                      command=self.service_maintenance, foreground="white",
-                                     bg=self.darkslategray, relief="raise")
+                                     bg=self.darkslategray)
         self.button_service.place(relx=0.53, rely=0.02, relwidth=0.2, relheight=0.25)
 
 
         self.button_iva = Button(self.label_main_options, text="VERIFY IVA", font=("bold"),foreground="white",
-                                         command=self.list_iva, bg=self.darkslategray, relief="raise")
+                                         command=self.list_iva, bg=self.darkslategray)
         self.button_iva.place(relx=0.79, rely=0.02, relwidth=0.2, relheight=0.25)
 
         self.label_expense = Label(self.label_main_options, text="Expense:", font=("bold"),
                                    foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_expense.place(relx=0.10, rely=0.75, relwidth=0.1, relheight=0.25)
 
-        self.label_expense_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+        self.label_expense_value = Label(self.label_main_options,text='',anchor='w', font=("bold"),
                                          foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_expense_value.place(relx=0.21, rely=0.75, relwidth=0.15, relheight=0.25)
 
@@ -331,7 +374,7 @@ class App_admin(Data_base):
                                   foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_profit.place(relx=0.36, rely=0.75, relwidth=0.1, relheight=0.25)
 
-        self.label_profit_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+        self.label_profit_value = Label(self.label_main_options,text='',anchor='w', font=("bold"),
                                         foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_profit_value.place(relx=0.45, rely=0.75, relwidth=0.15, relheight=0.25)
 
@@ -339,9 +382,13 @@ class App_admin(Data_base):
                                  foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_total.place(relx=0.70, rely=0.75, relwidth=0.1, relheight=0.25)
 
-        self.label_total_value = Label(self.label_main_options,text='asas',anchor='w', font=("bold"),
+        self.label_total_value = Label(self.label_main_options,text='',anchor='w', font=("bold"),
                                        foreground=self.ghostwhite,background=self.deepskyblue)
         self.label_total_value.place(relx=0.79, rely=0.75, relwidth=0.15, relheight=0.25)
+
+        self.button_graphics = Button(self.label_main_options, text="GRAPHIC", font=('Time',8,"bold"),foreground="white",
+                                         command=self.graphics_openpy, bg=self.darkslategray)
+        self.button_graphics.place(relx=0.90, rely=0.75, relwidth=0.1, relheight=0.25)
 
         self.profit_expense()
 
@@ -423,6 +470,216 @@ class App_admin(Data_base):
                 messagebox.showinfo("Service Car", "Vehicle need to pay IVA!")
                 break
         self.close_sql()
+
+    def menu_add_vehicle(self):
+
+        self.menu_add_vehicle = Toplevel()
+        self.menu_add_vehicle.title("Luxury Wheels")  # altera titulo da janela
+        self.menu_add_vehicle.geometry("500x500")
+        self.menu_add_vehicle.configure()
+        self.menu_add_vehicle.resizable(False,False)
+        self.menu_add_vehicle.iconbitmap('./static/assets/car.ico')
+        self.menu_add_vehicle.focus_force()
+        self.menu_add_vehicle.grab_set()
+
+        self.frame_add_vehicle = Frame(master=self.menu_add_vehicle,background=self.deepskyblue)
+        self.frame_add_vehicle.place(relx=0.01, rely= 0.01,relwidth=0.98, relheight=0.98 )
+
+        self.label_insert_text = ttk.Label(master=self.frame_add_vehicle,text="Insert new vehicle",
+                                           font=("times", 25, "bold"),background=self.darkslategray,
+                                           foreground=self.ghostwhite,relief='groove')
+        self.label_insert_text.place(relx=0.23, rely= 0.01,relwidth=0.53, relheight=0.10 )
+         # ----------------
+        self.label_type =ttk.Label(master=self.frame_add_vehicle,text="Type: ",
+                                           font=("times", 12, "bold"),background=self.deepskyblue,
+                                           foreground=self.ghostwhite,relief='flat')
+        self.label_type.place(relx=0.05, rely= 0.15,relwidth=0.10, relheight=0.05)
+
+
+        self.combobox_type = ttk.Combobox(master=self.frame_add_vehicle, values=self.list_types_vehicles,
+                                          font=("times", 12, "bold"), background='red',
+                                              textvariable=self.select_type_vehicle,foreground=self.deepskyblue)
+
+
+        self.combobox_type.place(relx=0.18, rely=0.15, relwidth=0.26, relheight=0.05)
+
+        self.label_name = ttk.Label(master=self.frame_add_vehicle, text="Name: ",
+                                    font=("times", 12, "bold"), background=self.deepskyblue,
+                                    foreground=self.ghostwhite, relief='flat')
+        self.label_name.place(relx=0.05, rely=0.25, relwidth=0.10, relheight=0.05)
+
+        self.entry_name = ttk.Entry(master=self.frame_add_vehicle,textvariable=self.select_name_vehicle,
+                                          font=("times", 12, "bold"),
+                                          foreground='black')
+        self.entry_name.place(relx=0.18, rely=0.25, relwidth=0.26, relheight=0.05)
+
+        self.label_date_service = ttk.Label(master=self.frame_add_vehicle, text="Date Service: ",
+                                            font=("times", 12, "bold"), background=self.deepskyblue,
+                                            foreground=self.ghostwhite, relief='flat')
+        self.label_date_service.place(relx=0.05, rely=0.35, relwidth=0.20, relheight=0.05)
+
+        self.entry_date_service = DateEntry(master=self.frame_add_vehicle, showweeknumbers=False,
+                                            textvariable=self.select_service_vehicle,
+                                            showothermonthdays=False, weekendbackground=self.deepskyblue,
+                                            weekendforeground='white', font=("times", 10, "bold"),
+                                            background=self.darkslategray, normalbackground=self.deepskyblue,
+                                            foreground=self.ghostwhite,date_pattern='y-mm-dd')
+        self.entry_date_service.place(relx=0.26, rely=0.35, relwidth=0.18, relheight=0.05)
+
+        self.label_last_iva = ttk.Label(master=self.frame_add_vehicle, text="Last Iva: ",
+                                    font=("times", 12, "bold"), background=self.deepskyblue,
+                                    foreground=self.ghostwhite, relief='flat')
+        self.label_last_iva.place(relx=0.60, rely=0.15, relwidth=0.14, relheight=0.05)
+
+        self.entry_last_iva = DateEntry(master=self.frame_add_vehicle,showweeknumbers=False,
+                                            showothermonthdays = False,weekendbackground=self.deepskyblue,
+                                        textvariable=self.select_last_iva_vehicle,
+                                            weekendforeground='white',font=("times", 10, "bold"),
+                                            background=self.darkslategray,normalbackground=self.deepskyblue,
+                                          foreground=self.ghostwhite,date_pattern='y-mm-dd')
+        self.entry_last_iva.place(relx=0.75, rely=0.15, relwidth=0.19, relheight=0.05)
+
+        self.label_next_iva = ttk.Label(master=self.frame_add_vehicle, text="Next Iva: ",
+                                    font=("times", 9, "bold"), background=self.deepskyblue,
+                                    foreground=self.ghostwhite, relief='flat')
+        self.label_next_iva.place(relx=0.60, rely=0.25, relwidth=0.14, relheight=0.05)
+
+        self.entry_next_iva = DateEntry(master=self.frame_add_vehicle,showweeknumbers=False,
+                                            showothermonthdays = False,weekendbackground=self.deepskyblue,
+                                            textvariable=self.select_next_iva_vehicle,
+                                            weekendforeground='white',font=("times", 10, "bold"),
+                                            background=self.darkslategray,normalbackground=self.deepskyblue,
+                                          foreground=self.ghostwhite,date_pattern='y-mm-dd')
+        self.entry_next_iva.place(relx=0.75, rely=0.25, relwidth=0.19, relheight=0.05)
+
+        self.label_price = ttk.Label(master=self.frame_add_vehicle, text="Price: ",
+                                    font=("times", 12, "bold"), background=self.deepskyblue,
+                                    foreground=self.ghostwhite, relief='flat')
+        self.label_price.place(relx=0.60, rely=0.35, relwidth=0.14, relheight=0.05)
+
+        self.entry_price = ttk.Entry(master=self.frame_add_vehicle,textvariable=self.select_price_vehicle,
+                                    font=("times", 12, "bold"), background='red',
+                                    foreground='black')
+        self.entry_price.place(relx=0.77, rely=0.35, relwidth=0.17, relheight=0.05)
+
+        self.label_category = ttk.Label(master=self.frame_add_vehicle, text="Category: ",
+                                    font=("times", 12, "bold"), background=self.deepskyblue,
+                                    foreground=self.ghostwhite, relief='flat')
+        self.label_category.place(relx=0.05, rely=0.45, relwidth=0.15, relheight=0.05)
+
+        self.combobox_category = ttk.Combobox(master=self.frame_add_vehicle, values=self.list_category_vehicles,
+                                          font=("times", 12, "bold"), background='black',
+                                              textvariable=self.select_category_vehicle,foreground=self.deepskyblue)
+        self.combobox_category.place(relx=0.23, rely=0.45, relwidth=0.21, relheight=0.05)
+
+        self.button_register_vehicle = Button(master=self.frame_add_vehicle,text='Register Vechicle', font=("bold")
+                                           ,  foreground="white",command=self.register_vehicle,
+                                           bg=self.darkslategray)
+        self.button_register_vehicle.place(relx=0.35, rely=0.55, relwidth=0.30, relheight=0.1)
+
+        self.label_menssage = ttk.Label(master=self.frame_add_vehicle, text="",
+                                        font=("times", 15, "bold"),background=self.deepskyblue,
+                                        foreground=self.brown1, relief='flat')
+        self.label_menssage.place(relx=0.25, rely=0.70, relwidth=0.50, relheight=0.05)
+
+        self.button_back_menu = Button(master=self.frame_add_vehicle, text='Back', font=("bold")
+                                              , foreground="white", command=self.back_main_menu,
+                                              bg=self.darkslategray)
+        self.button_back_menu.place(relx=0.10, rely=0.80, relwidth=0.20, relheight=0.08)
+
+    def functions_for_combobox(self):
+
+        self.list_types_vehicles = []
+        self.list_category_vehicles = []
+        for type in self.query_type():
+            self.list_types_vehicles.append(type[1])
+        for cat in self.query_Category():
+            self.list_category_vehicles.append(cat[1])
+    def register_vehicle(self):
+
+
+
+        try:
+            if (self.select_type_vehicle.get() == '' or self.select_name_vehicle.get() == '' or
+                    self.select_category_vehicle.get() == '' or self.select_price_vehicle.get()==''):
+                self.label_menssage['text'] = 'Please, enter all the fields!'
+                self.select_type_vehicle.set('')
+                self.select_name_vehicle.set('')
+                self.select_category_vehicle.set('')
+                self.select_price_vehicle.set(0)
+
+            else:
+
+                if self.select_type_vehicle.get() == 'Car':
+                    variable_type_vehicle = 1
+                else:
+                    variable_type_vehicle = 2
+
+                if self.select_category_vehicle.get() == 'Gold':
+                    variable_category_vehicle = 1
+                elif self.select_category_vehicle.get() == 'Silver':
+                    variable_category_vehicle = 2
+                else:
+                    variable_category_vehicle = 3
+
+                self.label_menssage['text'] = ''
+                var_image_table_vehicles = (self.select_name_vehicle.get().strip().replace(' ','')) + '.jpg'
+                print(var_image_table_vehicles)
+
+                self.open_sql()
+                new_vehicle = (f"INSERT INTO vehicles (type_id,name,status,service,date_service,iva,"
+                               f"next_iva,price_day,category_id,image_car) VALUES (?,?,?,?,?,?,?,?,?,?)")
+                self.cursor.execute(new_vehicle,(variable_type_vehicle,self.select_name_vehicle.get(),
+                                                 True,0,self.select_service_vehicle.get(),
+                                                 self.select_last_iva_vehicle.get(),self.select_next_iva_vehicle.get(),
+                                                 self.select_price_vehicle.get(),variable_category_vehicle,
+                                                 var_image_table_vehicles))
+                self.conn.commit()
+                self.close_sql()
+                self.back_main_menu()
+                messagebox.showinfo("Register Car", "New vehicle successfully!")
+
+                
+        except:
+            self.label_menssage['text'] = 'Please, enter all the fields!'
+
+    def back_main_menu(self):
+
+        self.menu_add_vehicle.destroy()
+
+    def check_need_buy_vehicle(self):
+
+        vehicle_count_gold,vehicle_count_silver,vehicle_count_economy = 0,0,0
+        client_count_gold, client_count_silver, client_count_economy = 0, 0, 0
+        vehicles_count_available = []
+
+        for vehicle_available in self.query_vehicle():
+            if vehicle_available[2] == 'Available':
+                vehicles_count_available.append(vehicle_available)
+
+        for vehicle in vehicles_count_available:
+            vehicle_count_gold += 1
+            if vehicle[8] == 'Silver' or vehicle[8] == 'Economy':
+                vehicle_count_silver += 1
+            if vehicle[8] == 'Economy':
+                vehicle_count_economy += 1
+
+        for client in self.query_clients():
+            vehicle_count_gold += 1
+            if client[4] == 1:
+                client_count_gold += 1
+            elif client[4] == 2:
+                client_count_silver += 1
+            elif client[4] == 3:
+                client_count_economy += 1
+
+        if (client_count_gold + 5) >= vehicle_count_gold:
+            messagebox.showwarning('Vechile','Need to buy more vehicles!')
+        elif (client_count_silver + 5) >= vehicle_count_silver:
+            messagebox.showwarning('Vechile', 'Need to buy more vehicles!')
+        elif (client_count_silver + 5) >= vehicle_count_economy:
+            messagebox.showwarning('Vechile', 'Need to buy more vehicles!')
+
     def list_rents(self):
 
         try:
@@ -536,7 +793,7 @@ class App_admin(Data_base):
         list_maintenance = []
         for check_rent in self.query_service():
             list_maintenance.append(check_rent)
-        print(list_maintenance)
+        
         for maintenance in list_maintenance:
             if maintenance[6] < str(datetime.now().date()):
                 convert_for_date = datetime.strptime(maintenance[5],'%Y-%m-%d').date()
@@ -568,7 +825,7 @@ class App_admin(Data_base):
 
         self.button_pay_iva = Button(self.label_main_options, text="Pay IVA", font=("bold")
                                            , foreground="white",command=self.pay_iva,
-                                           bg=self.darkslategray, relief="raise")
+                                           bg=self.darkslategray)
         self.button_pay_iva.place(relx=0.79, rely=0.35, relwidth=0.2, relheight=0.25)
 
         self.check_data.heading("#0", text="", anchor=CENTER)
@@ -598,6 +855,7 @@ class App_admin(Data_base):
         date_now = datetime.now().date()
         for check_iva in self.query_iva():
             date_table = datetime.strptime(check_iva[4],'%Y-%m-%d').date()
+
             self.check_data.insert("", END, values=check_iva, tags=('fg', 'bg'))
 
         if self.check_data.get_children() == ():
@@ -619,15 +877,15 @@ class App_admin(Data_base):
                 date_pay_iva = (f"UPDATE vehicles SET iva = '{vehicle[4]}', next_iva = '{new_date_iva}'"
                                 f" WHERE name = '{vehicle[2]}';")
                 self.cursor.execute(date_pay_iva)
-                update_iva_prices_car = """INSERT INTO iva_payments (name,type,price) VALUES (?,?,?); """
-                self.cursor.execute(update_iva_prices_car,(vehicle[2],vehicle[1],250))
+                update_iva_prices_car = """INSERT INTO iva_payments (name,type,price,date) VALUES (?,?,?,?); """
+                self.cursor.execute(update_iva_prices_car,(vehicle[2],vehicle[1],250,vehicle[4]))
                 self.conn.commit()
             elif vehicle[1] == 'Motorcycle':
                 date_pay_iva = (f"UPDATE vehicles SET iva = '{vehicle[4]}', next_iva = '{new_date_iva}'"
                                 f" WHERE name = '{vehicle[2]}';")
                 self.cursor.execute(date_pay_iva)
-                update_iva_prices_motorcycle = """INSERT INTO iva_payments (name,type,price) VALUES (?,?,?);"""
-                self.cursor.execute(update_iva_prices_motorcycle, (vehicle[2], vehicle[1], 150))
+                update_iva_prices_motorcycle = """INSERT INTO iva_payments (name,type,price,date) VALUES (?,?,?,?);"""
+                self.cursor.execute(update_iva_prices_motorcycle, (vehicle[2], vehicle[1],150,vehicle[4]))
                 self.conn.commit()
 
         self.button_pay_iva.place_forget()
@@ -649,6 +907,57 @@ class App_admin(Data_base):
         self.label_profit_value['text'] = str(profit) + ' £'
         total = profit - expense
         self.label_total_value['text'] = str(total) + ' £'
+
+    def graphics_openpy(self):
+
+        self.graphics = Toplevel()
+        self.graphics.title("Luxury Wheels")  # altera titulo da janela
+        self.graphics.geometry("500x500")
+        self.graphics.configure()
+        self.graphics.resizable(False, False)
+        self.graphics.iconbitmap('./static/assets/car.ico')
+        self.graphics.focus_force()
+        self.graphics.grab_set()
+
+        self.frame_graphics = Frame(master=self.graphics, background=self.deepskyblue)
+        self.frame_graphics.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.98)
+
+        df = pd.DataFrame({"Foo": (1, 2, 3, 4, 5, 7, 7),
+                           "Bar": (4.25, 5, 6, 1.3, 1, 2.6, 3.7)}
+                          )
+
+        # Creamos una figura y añadimos algunas gráficas en subplots
+        fig1 = Figure(figsize=(5, 5), dpi=100)
+        ax1 = fig1.add_subplot(311)
+        ax2 = fig1.add_subplot(312)
+
+        df.plot(ax=ax1)
+        df.plot.bar(ax=ax2)
+
+
+
+        # Canvas  y barras de desplazamiento
+        canvas = Canvas(root, borderwidth=0, background=self.deepskyblue)
+        hsb = Scrollbar(root, orient="horizontal", command=canvas.xview)
+        vsb = Scrollbar(root, orient="vertical", command=canvas.yview)
+        canvas.configure(xscrollcommand=hsb.set)
+        canvas.configure(yscrollcommand=vsb.set)
+        hsb.pack(side="bottom", fill="x")
+        vsb.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Vamos a usar un ttk.Labelframe para contener FigureCanvasTkAgg
+        plot_frame = ttk.Labelframe(canvas, text='Plots')
+        canvas.create_window((4, 4),  anchor="nw", tags="frame_graphics")
+        plot_frame.bind("<Configure>",
+                        lambda event: canvas.configure(scrollregion=canvas.bbox("all"))
+                        )
+
+        # Creamos una instancia de FigureCanvas que renderizará la figura
+        canvas1 = FigureCanvasTkAgg(fig1, master=self.frame_graphics)
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row=0, column=0)
+        self.screen_frame_main_data()
 
 
 if __name__ == '__main__':
