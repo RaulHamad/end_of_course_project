@@ -310,9 +310,10 @@ def manager():
     :return:
     """
     if __name__ == '__main__':
-        root = Tk()
-        app= App_admin(root)
-        root.mainloop()
+        # root = Tk()
+        App_admin()
+        # root.mainloop()
+
 
     return render_template("index.html")
 

@@ -1,17 +1,19 @@
 from tkinter import *
 from tkinter import ttk,messagebox
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import  DateEntry
 import sqlite3
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 from datetime import datetime,timedelta
-
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
+import openpyxl
 import pandas as pd
+import numpy as np
 
 
 
 root = Tk()
+
 
 class Data_base():
 
@@ -192,12 +194,11 @@ class Data_base():
 
 class App_admin(Data_base):
 
-
     def __init__(self):
         self.first_root = root
+        self.screen()
         self.variable()
         self.colors()
-        self.screen()
         self.screen_frame_1()
         self.screen_frame_2()
         self.label_notification()
@@ -207,10 +208,6 @@ class App_admin(Data_base):
         self.create_admin()
         self.query_iva_payments()
         self.functions_for_combobox()
-
-
-
-
 
 
 
@@ -238,6 +235,7 @@ class App_admin(Data_base):
         self.ghostwhite = "#F8F8FF"
 
     def screen(self):
+
         self.first_root.title("Luxury Wheels")  # altera titulo da janela
         self.first_root.resizable(True, True)  # permite redimensionar a janela
         self.first_root.geometry("700x500")
@@ -897,10 +895,10 @@ class App_admin(Data_base):
         profit,expense = 0,0
 
 
-        for check_price in self.query_rents():
-            if check_price[6] == 'EndRent':
-                profit += check_price[7]
-                
+        for check_price_profit in self.query_rents():
+            if check_price_profit[6] == 'EndRent':
+                profit += check_price_profit[7]
+
         for check_price in self.query_iva_payments():
             expense += check_price[3]
         self.label_expense_value['text'] = str(expense) + ' £'
@@ -912,7 +910,7 @@ class App_admin(Data_base):
 
         self.graphics = Toplevel()
         self.graphics.title("Luxury Wheels")  # altera titulo da janela
-        self.graphics.geometry("500x500")
+        self.graphics.geometry("700x700")
         self.graphics.configure()
         self.graphics.resizable(False, False)
         self.graphics.iconbitmap('./static/assets/car.ico')
@@ -922,41 +920,90 @@ class App_admin(Data_base):
         self.frame_graphics = Frame(master=self.graphics, background=self.deepskyblue)
         self.frame_graphics.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.98)
 
-        df = pd.DataFrame({"Foo": (1, 2, 3, 4, 5, 7, 7),
-                           "Bar": (4.25, 5, 6, 1.3, 1, 2.6, 3.7)}
-                          )
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'graphic'
+        graphic = wb['graphic']
 
-        # Creamos una figura y añadimos algunas gráficas en subplots
-        fig1 = Figure(figsize=(5, 5), dpi=100)
-        ax1 = fig1.add_subplot(311)
-        ax2 = fig1.add_subplot(312)
+        list_profit = []
+        for rents in self.query_rents():
+            month = datetime.strptime(rents[4], '%Y-%m-%d').date()
+            month_format = datetime.strftime(month, '%d/%b/%Y')
+            list_profit.append([month_format,rents[7]])
+        for add_rents_xlsx in list_profit:
+            graphic.append(add_rents_xlsx)
 
-        df.plot(ax=ax1)
-        df.plot.bar(ax=ax2)
+
+        list_expense = []
+        for iva in self.query_iva_payments():
+            month = datetime.strptime(iva[4], '%Y-%m-%d').date()
+            month_format = datetime.strftime(month, '%d/%b/%Y')
+            list_expense.append([month_format, (iva[3]*(-1))])
+
+        for add_iva_xlsx in list_expense:
+            graphic.append(add_iva_xlsx)
+
+        ws.insert_rows(1)
+
+        ws["A1"] = "Date"
+        ws["B1"] = "Profit-expense"
+        ws["C1"] = "Total"
+
+        ws.insert_rows(2)
+
+        ws["A2"] = ""
+        ws["B2"] = "0"
+        ws["C2"] = "0"
+        number_cell = 0
+
+        for cell in graphic.rows:
+            number_cell += 1
+
+        total = 4
+        ws["C3"] = "=B3"
+        while total <= number_cell:
+            ws[f"C{total}"] = f"=C{total - 1}+B{total}"
+            total+=1
+
+
+        wb.save('profit-expense.xlsx')
+
+        df_total = pd.read_excel("profit-expense.xlsx")
+
+        df_excel_data = df_total.groupby('Date')['Profit-expense'].sum().reset_index()
+
+        df_excel_data['acumulado'] = df_excel_data['Profit-expense'].cumsum()
+
+        df_excel_data.pop('Profit-expense')
+
+        df_excel_data['Date'] = pd.to_datetime(df_excel_data['Date'])
+
+        print(df_excel_data)
+
+        df_sort = df_excel_data.sort_values(by='Date')
 
 
 
-        # Canvas  y barras de desplazamiento
-        canvas = Canvas(root, borderwidth=0, background=self.deepskyblue)
-        hsb = Scrollbar(root, orient="horizontal", command=canvas.xview)
-        vsb = Scrollbar(root, orient="vertical", command=canvas.yview)
-        canvas.configure(xscrollcommand=hsb.set)
-        canvas.configure(yscrollcommand=vsb.set)
-        hsb.pack(side="bottom", fill="x")
-        vsb.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
 
-        # Vamos a usar un ttk.Labelframe para contener FigureCanvasTkAgg
-        plot_frame = ttk.Labelframe(canvas, text='Plots')
-        canvas.create_window((4, 4),  anchor="nw", tags="frame_graphics")
-        plot_frame.bind("<Configure>",
-                        lambda event: canvas.configure(scrollregion=canvas.bbox("all"))
-                        )
+        profit = np.array(df_sort['Date'])
+        expense = np.array(df_sort['acumulado'])
 
-        # Creamos una instancia de FigureCanvas que renderizará la figura
-        canvas1 = FigureCanvasTkAgg(fig1, master=self.frame_graphics)
-        canvas1.draw()
-        canvas1.get_tk_widget().grid(row=0, column=0)
+
+
+
+        fig = plt.Figure((6,6), 65, facecolor=self.deepskyblue )
+        ax = fig.add_subplot(111)
+
+        canvas = FigureCanvasTkAgg(fig, master=self.frame_graphics)
+
+        canvas.get_tk_widget().place(relx=0.05, rely=0.05, relwidth=0.80, relheight=0.80)
+
+        ax.plot(profit,expense)
+
+        ax.set_title('EARN')
+        ax.set_xlabel('date')
+        ax.set_ylabel('Money')
+
         self.screen_frame_main_data()
 
 
