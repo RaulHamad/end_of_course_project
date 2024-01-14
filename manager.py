@@ -1,8 +1,8 @@
 from tkinter import *
-from tkinter import ttk,messagebox
-from tkcalendar import  DateEntry
+from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
 import sqlite3
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash,check_password_hash
 from datetime import datetime,timedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -11,25 +11,30 @@ import pandas as pd
 import numpy as np
 
 
-
-root = Tk()
-
-
 class Data_base():
 
+    """
+    Classe para criação e pesquisar no banco de dados
+    """
 
     def open_sql(self):
+        """
+        Abrir banco de dados e cria cursor
+        """
         self.conn = sqlite3.connect("database/luxurywheels.db")
         self.cursor = self.conn.cursor()
 
-
     def close_sql(self):
+        """
+        Fecha banco de dados
+        """
         self.conn.close()
 
-
     def table_admin(self):
+        """
+        Criação da tabela administrador para login do app
+        """
         self.open_sql()
-
         admin_table =   """
                         CREATE TABLE IF NOT EXISTS administrators (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +47,9 @@ class Data_base():
         self.close_sql()
 
     def table_iva(self):
+        """
+        Criação da tabela de pagamentos dos veiculos com iva pagos
+        """
         self.open_sql()
 
         iva_table =   """
@@ -57,14 +65,20 @@ class Data_base():
         self.cursor.execute(iva_table)
         self.conn.commit()
         self.close_sql()
+
     def query_admin(self):
+        """
+        :return: Pesquisa na tabela administrators e retorna todos os resultados
+        """
         self.open_sql()
         verify_table_admin = """SELECT * FROM  administrators"""
         result = self.cursor.execute(verify_table_admin)
-
         return result.fetchall()
 
     def create_admin(self):
+        """
+        Criação do login do administrador para o app
+        """
         self.open_sql()
         self.query_admin()
         if self.query_admin() == []:
@@ -78,24 +92,38 @@ class Data_base():
         self.close_sql()
 
     def query_type(self):
+        """
+        :return: Pesquisa e retorna todos o tipos de veículos
+        """
         self.open_sql()
         verify_table_types = f"SELECT * FROM vehicle_types"
         result = self.cursor.execute(verify_table_types)
         return result.fetchall()
 
     def query_clients(self):
+        """
+        :return: Pesquisa e retorna todos o clientes cadastrados
+        """
         self.open_sql()
         verify_clients = f"SELECT * FROM clients"
         result = self.cursor.execute(verify_clients)
         return result.fetchall()
+
     def query_Category(self):
+        """
+        :return: Pesquisa e retorna todas as categorias de clientes
+        """
         self.open_sql()
         verify_table_category = f"SELECT * FROM categories"
         result = self.cursor.execute(verify_table_category)
         return result.fetchall()
 
     def query_vehicle(self):
-
+        """
+        Pesquisa todos os veículos cadastrados
+        :return:  id, nome, status do aluguel, número de serviço, data de serviço,
+        data do último iva, data do próximo iva, nome da categoria do veículo
+        """
         self.open_sql()
         vehicle_table = """SELECT 
         v.id,
@@ -120,6 +148,11 @@ class Data_base():
         return result
 
     def query_rents(self):
+        """
+        Pesquisa todos os alugueis cadastrados
+        :return:  id, nome do cliente, nome do veículo, data do início do aluguel, data de término do aluguel,
+        preço da diária, status do aluguel, preço total do aluguel
+        """
         self.open_sql()
         rents_table = """
         SELECT 
@@ -143,6 +176,10 @@ class Data_base():
         return result
 
     def query_service(self):
+        """
+        Pesquisa todos os veículos com status 5 (precisam fazer revisão) que irão ficar indisponíveis por 30 dias
+        :return: id, nome, statu, status do serviço, data do último iva, data do próximo iva, data da revisão
+        """
         self.open_sql()
 
         service_table = """
@@ -168,6 +205,10 @@ class Data_base():
         return result
 
     def query_iva(self):
+        """
+        Pesquisa todos os veículos com iva em atraso para pagamento
+        :return: id, tipo, nome, data do último iva, data do próximo iva
+        """
         date = str(datetime.now().date())
         self.open_sql()
         vehicle_table = """SELECT 
@@ -186,6 +227,10 @@ class Data_base():
         return result
 
     def query_iva_payments(self):
+        """
+        Exibe todos os dados da tabela de iva_payments
+        :return: todos os dados da tabela
+        """
         self.open_sql()
         iva_payments_table = """SELECT * FROM iva_payments ;"""
         result = self.cursor.execute(iva_payments_table)
@@ -195,10 +240,11 @@ class Data_base():
 class App_admin(Data_base):
 
     def __init__(self):
+        root = Tk()
         self.first_root = root
-        self.screen()
         self.variable()
         self.colors()
+        self.screen()
         self.screen_frame_1()
         self.screen_frame_2()
         self.label_notification()
@@ -214,6 +260,9 @@ class App_admin(Data_base):
         root.mainloop()
 
     def variable(self):
+        """
+        Armazenar todas as variáveis utilizadas na criação do app
+        """
         self.var_login = StringVar()
         self.var_password = StringVar()
         self.select_type_vehicle = StringVar()
@@ -224,10 +273,10 @@ class App_admin(Data_base):
         self.select_price_vehicle = IntVar()
         self.select_category_vehicle = StringVar()
 
-
-
-
     def colors(self):
+        """
+        Cores utilizadas na criação do app
+        """
         self.deepskyblue = "#00688B"
         self.deepskyblue4 = "#1C86EE"
         self.darkslategray ="#2F4F4F"
@@ -235,7 +284,9 @@ class App_admin(Data_base):
         self.ghostwhite = "#F8F8FF"
 
     def screen(self):
-
+        """
+        Inicialização e configuração da janela principal do tkinter
+        """
         self.first_root.title("Luxury Wheels")  # altera titulo da janela
         self.first_root.resizable(True, True)  # permite redimensionar a janela
         self.first_root.geometry("700x500")
@@ -243,8 +294,12 @@ class App_admin(Data_base):
         self.first_root.minsize(width=700,height=500)
         self.first_root.maxsize(width=900,height=800)
         self.first_root.iconbitmap('./static/assets/car.ico')
+        self.first_root.iconify()
 
     def screen_frame_1(self):
+        """
+        Criação do frame para titulo da janela principal
+        """
         self.frame_1 = Frame(self.first_root)
         self.frame_1.place(relx=0.05,rely=0.03,relwidth=0.9, relheight=0.2)
 
@@ -259,9 +314,10 @@ class App_admin(Data_base):
         self.label_photo_title_2 = ttk.Label(self.frame_1, image=photo_title)
         self.label_photo_title_2.place(relx=0.75, rely=0.03)
 
-
-
     def screen_frame_2(self):
+        """
+        Criação do frame para os campos de login e password do administador
+        """
         self.frame_2 = Frame(self.first_root)
         self.frame_2.place(relx=0.05, rely=0.30, relwidth=0.9, relheight=0.6)
 
@@ -287,44 +343,47 @@ class App_admin(Data_base):
         self.button_login.bind('<Return>',lambda x: x==self.autentication_login())
 
     def label_notification(self):
+        """
+        Label que exibe as informações de falha de login ou senha
+        """
         self.label_login = ttk.Label(self.frame_2,text="",font=(15),background=self.brown1,foreground=self.ghostwhite)
         self.label_login.place(relx=0.5,rely=0.07)
         self.label_login.place_forget()
 
-
     def autentication_login(self):
-
-        # print(self.var_login.get(),self.var_password.get())
-        # if len(self.var_login.get()) == 0 or len(self.var_password.get()) == 0:
-        #     self.label_login["text"] = "Login or Password does not exist"
-        #     self.label_login.place(relx=0.5, rely=0.07)
-        #     self.var_login.set("")
-        #     self.var_password.set("")
-        #
-        # else:
-        #     for i in self.query_admin():
-        #         pass_cryp = check_password_hash(i[2], self.var_password.get())
-        #
-        #         if self.var_login.get() != i[1] and pass_cryp == False:
-        #             self.label_login["text"] = "Login ou senha inválidos"
-        #             self.label_login.place(relx=0.5, rely=0.07)
-        #             self.var_login.set("")
-        #             self.var_password.set("")
-        #
-        #         else:
-        #
-        #             self.label_login["text"] = "Logado"
-        #             self.label_login.place(relx=0.5, rely=0.07)
-        #             self.var_login.set("")
-        #             self.var_password.set("")
+        """
+        Verificação dos campos de login e senha inseridos pelo usuário com a tabela de administrador para acessar o app
+        :return: screen_frame_main_data - menu principal de pesquisa
+        """
+        if len(self.var_login.get()) == 0 or len(self.var_password.get()) == 0:
+            self.label_login["text"] = "Login or Password does not exist"
+            self.label_login.place(relx=0.4, rely=0.07)
+            self.var_login.set("")
+            self.var_password.set("")
+        else:
+            for i in self.query_admin():
+                pass_cryp = check_password_hash(i[2], self.var_password.get())
+                print(pass_cryp)
+                if self.var_login.get() != i[1] or pass_cryp == False:
+                    self.label_login["text"] = "Login ou senha inválidos"
+                    self.label_login.place(relx=0.5, rely=0.07)
+                    self.var_login.set("")
+                    self.var_password.set("")
+                else:
+                    self.label_login["text"] = "Logado"
+                    self.label_login.place(relx=0.5, rely=0.07)
+                    self.var_login.set("")
+                    self.var_password.set("")
                     return self.screen_frame_main_data()
-    def screen_frame_main_data(self):
 
+    def screen_frame_main_data(self):
+        """
+        Menu principal: criação dos botões de pesquisa de veículos,alugueis,veículos em serviço,iva atrasado,
+        adicionar veículo,exibir gráfico financeiro
+        :return:
+        """
         self.frame_1.place_forget()
         self.frame_2.place_forget()
-
-
-        self.check_need_buy_vehicle()
 
         self.frame_3 = Frame(self.first_root,background=self.deepskyblue)
         self.frame_3.place(relx=0.01,rely=0.01,relwidth=0.98, relheight=0.99)
@@ -340,8 +399,8 @@ class App_admin(Data_base):
                                           bg=self.darkslategray)
         self.button_list_vehicle.place(relx=0.01, rely=0.02, relwidth=0.2, relheight=0.25)
 
-        self.button_add_vehicle = Button(self.label_main_options, text="NEW VEHICLE", font=("bold")
-                                           , command=self.menu_add_vehicle, foreground="white",
+        self.button_add_vehicle = Button(self.label_main_options, text="NEW VEHICLE", font=("bold"),
+                                           command=self.menu_add_vehicle, foreground="white",
                                            bg=self.darkslategray)
         self.button_add_vehicle.place(relx=0.01, rely=0.35, relwidth=0.2, relheight=0.25)
 
@@ -391,15 +450,22 @@ class App_admin(Data_base):
         self.profit_expense()
 
     def clear_checklist(self):
-
+        """
+        :return: apaga o Label da visualização das pesquisas
+        """
         return self.label_main_view_vehicle.place_forget()
+
     def list_vehicle(self):
+        """
+        configuração da Treeview e widgets para exibir os dados de todos os veículos pesquisados
+        Apaga os botões de start serviço e pagamento de iva
+        :return:
+        """
 
         try:
             self.button_start_service.place_forget()
         except:
             pass
-
         try:
             self.button_pay_iva.place_forget()
         except:
@@ -443,7 +509,6 @@ class App_admin(Data_base):
 
         self.check_data.delete(*self.check_data.get_children())
 
-
         for check_vehicle in self.query_vehicle():
 
             if check_vehicle[2] == 'Rented':
@@ -455,22 +520,27 @@ class App_admin(Data_base):
                     self.check_data.insert("", END, values=check_vehicle, tags=('fg', 'bg'))
             elif datetime.strptime(check_vehicle[6],'%Y-%m-%d').date() <= datetime.now().date():
                 self.check_data.insert("", END, values=check_vehicle, tags=('fg','bg'))
-
             else:
                 self.check_data.insert("", END, values=check_vehicle)
+
         for check_vehicle in self.query_vehicle():
 
             if check_vehicle[3] > 4 and check_vehicle[4] < str(datetime.now().date()):
                 messagebox.showinfo("Service Car", "Vehicle need service!")
                 break
+
         for check_vehicle in self.query_vehicle():
             if datetime.strptime(check_vehicle[6],'%Y-%m-%d').date() <= datetime.now().date():
                 messagebox.showinfo("Service Car", "Vehicle need to pay IVA!")
                 break
+        self.check_need_buy_vehicle()
         self.close_sql()
 
     def menu_add_vehicle(self):
-
+        """
+        Nova janela com os widgets para adicionar um novo veícula ao banco de dados
+        :return:
+        """
         self.menu_add_vehicle = Toplevel()
         self.menu_add_vehicle.title("Luxury Wheels")  # altera titulo da janela
         self.menu_add_vehicle.geometry("500x500")
@@ -586,6 +656,9 @@ class App_admin(Data_base):
         self.button_back_menu.place(relx=0.10, rely=0.80, relwidth=0.20, relheight=0.08)
 
     def functions_for_combobox(self):
+        """
+        método para listar os tipos de veículos e cetagoria na janela de adicionar veículos
+        """
 
         self.list_types_vehicles = []
         self.list_category_vehicles = []
@@ -593,9 +666,11 @@ class App_admin(Data_base):
             self.list_types_vehicles.append(type[1])
         for cat in self.query_Category():
             self.list_category_vehicles.append(cat[1])
+
     def register_vehicle(self):
-
-
+        """
+        Verificação dos dados inseridos pelo usuário para criação do veículo
+        """
 
         try:
             if (self.select_type_vehicle.get() == '' or self.select_name_vehicle.get() == '' or
@@ -605,7 +680,6 @@ class App_admin(Data_base):
                 self.select_name_vehicle.set('')
                 self.select_category_vehicle.set('')
                 self.select_price_vehicle.set(0)
-
             else:
 
                 if self.select_type_vehicle.get() == 'Car':
@@ -637,15 +711,20 @@ class App_admin(Data_base):
                 self.back_main_menu()
                 messagebox.showinfo("Register Car", "New vehicle successfully!")
 
-                
         except:
             self.label_menssage['text'] = 'Please, enter all the fields!'
 
     def back_main_menu(self):
-
+        """
+        método para adicionar comando ao Button "Back" para fechar a janela de adicionar veículos
+        """
         self.menu_add_vehicle.destroy()
 
     def check_need_buy_vehicle(self):
+        """
+        Método para verificar a quantidade de clientes cadastrados e veículos
+        :return: Se não tiver disponível pelo menos 5 veículos para cada tipo de cliente, uma mensagem é exibida
+        """
 
         vehicle_count_gold,vehicle_count_silver,vehicle_count_economy = 0,0,0
         client_count_gold, client_count_silver, client_count_economy = 0, 0, 0
@@ -679,6 +758,11 @@ class App_admin(Data_base):
             messagebox.showwarning('Vechile', 'Need to buy more vehicles!')
 
     def list_rents(self):
+        """
+        configuração da Treeview e widgets para exibir os dados de todos os alugueis pesquisados
+        Apaga os botões de start serviço e pagamento de iva
+        :return:
+        """
 
         try:
             self.button_start_service.place_forget()
@@ -707,7 +791,6 @@ class App_admin(Data_base):
         self.check_data.heading("#7", text="Status_rent", anchor=CENTER)
         self.check_data.heading("#8", text="Total_price", anchor=CENTER)
 
-
         self.check_data.column("#0",width=1)
         self.check_data.column("#1", width=20)
         self.check_data.column("#2", width=90)
@@ -732,7 +815,11 @@ class App_admin(Data_base):
                 self.check_data.insert("", END, values=check_rent)
         self.close_sql()
         self.profit_expense()
+
     def service_maintenance(self):
+        """
+        Exibi todos os veículos que precisam fazer a revisão após 5 alugueis
+        """
 
         try:
             self.button_pay_iva.place_forget()
@@ -748,7 +835,7 @@ class App_admin(Data_base):
 
         self.button_start_service = Button(self.label_main_options, text="START SERVICE", font=("bold")
                                     ,command=self.start_maintenance, foreground="white",
-                                     bg=self.darkslategray, relief="raise")
+                                     bg=self.darkslategray)
         self.button_start_service.place(relx=0.53, rely=0.35, relwidth=0.2, relheight=0.25)
 
         self.check_data.heading("#0", text="", anchor=CENTER)
@@ -760,7 +847,6 @@ class App_admin(Data_base):
         self.check_data.heading("#6", text="Return_date", anchor=CENTER)
         self.check_data.heading("#7", text="Date Service", anchor=CENTER)
 
-
         self.check_data.column("#0", width=1)
         self.check_data.column("#1", width=20)
         self.check_data.column("#2", width=90)
@@ -770,7 +856,6 @@ class App_admin(Data_base):
         self.check_data.column("#6", width=60)
         self.check_data.column("#7", width=70)
 
-
         self.scrool = Scrollbar(self.label_main_view_vehicle, orient="vertical")
         self.check_data.configure(yscrollcommand=self.scrool.set)
         self.scrool.place(relx=0.96, rely=0.02, relwidth=0.05, relheight=0.95)
@@ -778,14 +863,20 @@ class App_admin(Data_base):
         self.check_data.delete(*self.check_data.get_children())
         date_now = datetime.now().date()
         for check_rent in self.query_service():
-
             if check_rent[6] < str(date_now):
                 self.check_data.insert("", END, values=check_rent, tags=('fg', 'bg'))
+
         if self.check_data.get_children() == ():
             self.button_start_service.place_forget()
             messagebox.showinfo("Service Car", "All vehicles service conclued!")
+
         self.close_sql()
+
     def start_maintenance(self):
+        """
+        Widget que verifica os veículos listados em service_maintenance e atualiza o banco de dados com a data
+        de revisão (date_service) para 30 dias a frente
+        """
         self.check_data.delete(*self.check_data.get_children())
         date_maintenance = timedelta(days=30)
         list_maintenance = []
@@ -796,16 +887,19 @@ class App_admin(Data_base):
             if maintenance[6] < str(datetime.now().date()):
                 convert_for_date = datetime.strptime(maintenance[5],'%Y-%m-%d').date()
                 new_date_finish_maintenance = str(convert_for_date + date_maintenance)
-
                 date_finish_maintenance = (f"UPDATE vehicles SET date_service = '{new_date_finish_maintenance}'"
                                            f"WHERE name = '{maintenance[1]}';")
                 self.cursor.execute(date_finish_maintenance)
                 self.conn.commit()
+
         self.button_start_service.place_forget()
         self.list_vehicle()
         self.close_sql()
 
     def list_iva(self):
+        """
+        Exibi todos os veículos que precisam fazer o pagamento de iva
+        """
 
         try:
             self.button_start_service.place_forget()
@@ -833,8 +927,6 @@ class App_admin(Data_base):
         self.check_data.heading("#4", text="Iva", anchor=CENTER)
         self.check_data.heading("#5", text="Next Iva", anchor=CENTER)
 
-
-
         self.check_data.column("#0", width=1)
         self.check_data.column("#1", width=50)
         self.check_data.column("#2", width=100)
@@ -842,13 +934,11 @@ class App_admin(Data_base):
         self.check_data.column("#4", width=100)
         self.check_data.column("#5", width=100)
 
-
         self.scrool = Scrollbar(self.label_main_view_vehicle, orient="vertical")
         self.check_data.configure(yscrollcommand=self.scrool.set)
         self.scrool.place(relx=0.96, rely=0.02, relwidth=0.05, relheight=0.95)
 
         self.check_data.delete(*self.check_data.get_children())
-
 
         date_now = datetime.now().date()
         for check_iva in self.query_iva():
@@ -861,6 +951,9 @@ class App_admin(Data_base):
             messagebox.showinfo("Service Car", "All vehicles paid!")
 
     def pay_iva(self):
+        """
+        Método que atualiza as data de iva e next_iva, além de adicionar os dados a tabela de iva_payments
+        """
         self.check_data.delete(*self.check_data.get_children())
         date_yearly_iva = timedelta(days=365)
         list_iva = []
@@ -892,8 +985,10 @@ class App_admin(Data_base):
         self.profit_expense()
 
     def profit_expense(self):
+        """
+        Criaçao dos Labels de lucro,débito e total dos rendimentos no frame do menu inicial
+        """
         profit,expense = 0,0
-
 
         for check_price_profit in self.query_rents():
             if check_price_profit[6] == 'EndRent':
@@ -907,6 +1002,11 @@ class App_admin(Data_base):
         self.label_total_value['text'] = str(total) + ' £'
 
     def graphics_openpy(self):
+        """
+        Criação do gráfico financeiro da empresa
+        Armazenar os dados em excel
+        Trabalhar os dados com dataframe
+        """
 
         self.graphics = Toplevel()
         self.graphics.title("Luxury Wheels")  # altera titulo da janela
@@ -920,6 +1020,7 @@ class App_admin(Data_base):
         self.frame_graphics = Frame(master=self.graphics, background=self.deepskyblue)
         self.frame_graphics.place(relx=0.01, rely=0.01, relwidth=0.98, relheight=0.98)
 
+        #Trabalhar dados com Excel
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = 'graphic'
@@ -968,6 +1069,7 @@ class App_admin(Data_base):
 
         wb.save('profit-expense.xlsx')
 
+        #Trabalhar dados do excel com dataframe
         df_total = pd.read_excel("profit-expense.xlsx")
 
         df_excel_data = df_total.groupby('Date')['Profit-expense'].sum().reset_index()
@@ -978,18 +1080,10 @@ class App_admin(Data_base):
 
         df_excel_data['Date'] = pd.to_datetime(df_excel_data['Date'])
 
-        print(df_excel_data)
-
         df_sort = df_excel_data.sort_values(by='Date')
-
-
-
 
         profit = np.array(df_sort['Date'])
         expense = np.array(df_sort['acumulado'])
-
-
-
 
         fig = plt.Figure((6,6), 65, facecolor=self.deepskyblue )
         ax = fig.add_subplot(111)
@@ -1007,9 +1101,6 @@ class App_admin(Data_base):
         self.screen_frame_main_data()
 
 
-if __name__ == '__main__':
-
-    App_admin()
 
 
 

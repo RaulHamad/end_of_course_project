@@ -2,8 +2,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, url_for, request, redirect, session
 from datetime import datetime
 from models import *
-from manager import *
+from manager import App_admin
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 
 app = Flask(__name__)
@@ -180,7 +181,7 @@ def rent_car():
 @app.route('/end_rent/', methods=['GET', 'POST'])
 def end_rent():
     """
-    Rota para exibir os dados selecionados pelo usuário e confirmação do aluguel, criando os dados na tabela rents
+    Rota para exibir os dados selecionados pelo usuário, confirmação do aluguel e redirecionamento para dados bancários
 
     :return:
     """
@@ -214,7 +215,8 @@ def end_rent():
 @app.route('/payment/', methods=['GET', 'POST'])
 def payment():
     """
-    Rota para inserir os dados de pagamento do aluguel, e salvar no banco de dados as informações
+    Rota para inserir os dados de pagamento do aluguel, salvar no banco de dados as informações e criar
+    objeto Rents ( tabela de alugueis)
 
     :return:
     """
@@ -234,7 +236,6 @@ def payment():
     user = db.session.query(User).filter(User.id == clients_login).first()
     categ = db.session.query(Category).filter(Category.id == user.categories_id).first()
     vehicle = db.session.query(Vehicle).filter(Vehicle.id == vehicless).first()
-
 
     if request.method == 'POST':
         card_number = request.form['card_number']
@@ -306,13 +307,13 @@ def my_rentals():
 @app.route('/manager/')
 def manager():
     """
-    Inicializar o app administrador(será feito o app pelo tkinter)
+    Inicializar o app administrador
     :return:
     """
     if __name__ == '__main__':
-        # root = Tk()
+
         App_admin()
-        # root.mainloop()
+
 
 
     return render_template("index.html")
