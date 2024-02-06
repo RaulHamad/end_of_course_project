@@ -45,7 +45,7 @@ def page_index():
                 db.session.commit()
 
     for check_vehicle in check_vehicles_service:
-        if check_vehicle.date_service == str(datetime.now().date()) and check_vehicle.status == True:
+        if check_vehicle.date_service >= date_today or check_vehicle.status == True:
             check_vehicle.service = 0
             db.session.commit()
 
