@@ -19,7 +19,7 @@ db.init_app(app)
 def page_index():
     """
         session.clear() : limpar session para não acessar página de aluguel sem estar logado
-        check_rents,check_vehicles_status,
+        check_rents,check_vehicles_status ,
         check_vehicles_service,date_today : atualiza banco de dados de aluguel e veiculos.
         Aluguel finalizado retorna status False e status do veiculo altera para True.
 
